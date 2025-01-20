@@ -43,21 +43,12 @@ public class UserService {
     private final JwtUtil jwtUtil; //토큰
 
 
-    // 입력된 비밀번호와 디비 암호화된비밀번호 확인
-    public void checkEncodePassword(String rawPassword, String encodedPassword){
-        if(!passwordEncoder.matches(rawPassword,encodedPassword)){
-            throw new UserException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
-        }
-    }
-
-
     // 비밀번호와 확인 비밀번호 일치 확인
     public void verifyPasswordMatch(String password, String confirmPassword) {
         if (!password.equals(confirmPassword)) {
             throw new UserException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
         }
     }
-
 
     public boolean isExistUserEmail(String email) {
         if(userRepository.findByEmail(email).isPresent()){
@@ -66,16 +57,6 @@ public class UserService {
         return false; // 이메일이 존재하지 않으면 false 반환
     }
 
-    // 저장된 이메일과 비밀번호 일치 확인
-    private void authenticate(String email, String password) {
-        try{
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email,password));
-        }catch (DisabledException de){
-            throw new UserException(HttpStatus.BAD_REQUEST,"인증되지 않은 아이디입니다.");
-        }catch (BadCredentialsException bce){
-            throw new UserException(HttpStatus.BAD_REQUEST,"비밀번호가 일치하지 않습니다.");
-        }
-    }
 
     // 회원가입 메서드
     public UserResponseDto register(RegisterDto registerDto){
