@@ -24,6 +24,14 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/checkId")
+    public ResponseEntity<?> checkIdDuplicate(@RequestParam String email){
+        log.info("이메일 중복 체크 요청");
+        userService.isExistUserEmail(email);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> register(@RequestBody RegisterDto registerDto){
         UserResponseDto registerUser = userService.register(registerDto);
@@ -31,6 +39,7 @@ public class UserController {
     }
     @PostMapping("/login")
     public ResponseEntity<UserTokenDto> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
+        log.info("로그인 요청");
         try {
             UserTokenDto loginUser = userService.login(loginDto, response);
             return ResponseEntity.ok(loginUser);

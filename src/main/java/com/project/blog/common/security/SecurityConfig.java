@@ -1,5 +1,6 @@
 package com.project.blog.common.security;
 
+import com.project.blog.common.Role;
 import com.project.blog.common.jwt.JwtAuthenticationEntryPoint;
 import com.project.blog.common.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +37,11 @@ public class SecurityConfig {
                 .csrf(csrf->csrf.disable())
                 .cors(cors->cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(authorize->authorize
-                        .requestMatchers("").permitAll()
-                        .requestMatchers("").authenticated()
-                        .requestMatchers("").authenticated()
-                        .requestMatchers("").authenticated()
-                        .requestMatchers("").authenticated())
+                        .requestMatchers("/user/main", "/user/login", "/user/register", "/user/checkId").permitAll()
+                        .requestMatchers("/user/**").authenticated())
+//                        .requestMatchers("").authenticated()
+//                        .requestMatchers("").authenticated()
+//                        .requestMatchers("").authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(excp->excp.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
