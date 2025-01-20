@@ -17,21 +17,19 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class UserTokenDto {
     private String email;
     private String accessToken;
-    private String refreshToken;
+
 
     @Builder
-    public UserTokenDto(String accessToken, String refreshToken, String email) {
+    public UserTokenDto(String accessToken, String email) {
         this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
         this.email = email;
     }
 
     //Entity -> Dto
-    public static UserTokenDto fromEntity(UserDetails user, String accessToken, String refreshToken) {
+    public static UserTokenDto fromEntity(UserDetails user, String accessToken) {
         return UserTokenDto.builder()
                 .email(user.getUsername())
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .build();
     }
 }
