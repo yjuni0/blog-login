@@ -39,24 +39,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader(HEADER_STRING);
         String refreshHeader = request.getHeader(REFRESH_HEADER_STRING);
         String username = null;
-        String authToken = null;
+        String accessToken = null;
         String refreshToken = null;
 
+        // 엑세스 토큰 헤더 확인
         if(header != null && header.startsWith(TOKEN_PREFIX)){
-            authToken = header.substring(TOKEN_PREFIX.length());
+            // 토큰 헤더 제거 ( 토큰만 추출)
+            accessToken = header.substring(TOKEN_PREFIX.length());
             try {
-                username = this.jwtUtil.getUsernameFromToken(authToken);
+                // 토큰으로 사용자 추출
+                username = this.jwtUtil.getUsernameFromToken(accessToken);
                 log.info("JWT 토큰에서 사용자명 추출 완료");
             } catch (ExpiredJwtException eje) {
                 log.info("액세스 토큰 만료, 리프레시 토큰 확인");
+                // 리프레시 헤더 확인
                 if (refreshHeader != null && refreshHeader.startsWith(TOKEN_PREFIX)) {
+                    // 토큰 헤더 제거 ( 토큰만 추출)
                     refreshToken = refreshHeader.substring(TOKEN_PREFIX.length());
                     try {
+                        // 토큰으로 사용자 추출
                         username = this.jwtUtil.getUsernameFromToken(refreshToken);
+                        // 토큰 검증
                         if (this.jwtUtil.validateRefreshToken(refreshToken)) {
                             String newAccessToken = this.jwtUtil.generationAccessToken(this.userDetailService.loadUserByUsername(username));
                             response.setHeader(HEADER_STRING, TOKEN_PREFIX + newAccessToken);
-                            authToken = newAccessToken;
+                            accessToken = newAccessToken;
                             log.info("새로운 액세스 토큰 발급 완료");
                         } else {
                             log.error("리프레시 토큰 만료");
@@ -73,7 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 } else {
                     log.error("리프레시 토큰이 없음");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("리프레시 토큰이 없습니다. 다시 로그인해주세요.");
+                    response.getWriter().write("리프레시 토큰이 없습니다. 다시 로그인해 주세요.");
                     return;
                 }
             } catch (Exception e) {
@@ -83,25 +90,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
         } else {
-            log.warn("토큰이 헤더에 포함되어있지 않거나 잘못된 형식");
+            log.warn("토큰이 헤더에 포함 되어 있지 않거나 잘못된 형식");
         }
-
+        // 사용자 이름이 존재 하고, 현재 인증 정보가 없을 때
         if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+            // 사용자 정보 로드
             UserDetails userDetails = this.userDetailService.loadUserByUsername(username);
-            if (this.jwtUtil.validateToken(authToken, userDetails)){
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+            // 토큰 유효성 검사
+            if (this.jwtUtil.validateToken(accessToken, userDetails)){
+                // 새로운 인증 토큰 생성
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                // 인증 세부 정보 설정
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                // SecurityContext 에 인증 정보 저장
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             } else {
-                log.info("유효하지 않은 토큰");
+                // 토큰 유효 하지 않을 경우 처리
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("유효하지 않은 토큰");
-                return;
+                response.getWriter().write("유효 하지 않은 토큰");
             }
-        } else {
-            log.info("사용자 이름이 null 이거나 인증 정보가 이미 설정되어 있습니다.");
         }
-
         filterChain.doFilter(request, response);
     }
 }
