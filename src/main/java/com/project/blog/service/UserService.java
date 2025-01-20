@@ -10,7 +10,9 @@ import com.project.blog.dto.request.RegisterDto;
 import com.project.blog.dto.request.UserUpdateDto;
 import com.project.blog.dto.response.UserResponseDto;
 import com.project.blog.dto.response.UserTokenDto;
+import com.project.blog.entity.RefreshToken;
 import com.project.blog.entity.User;
+import com.project.blog.repository.RefreshTokenRepository;
 import com.project.blog.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -34,13 +36,14 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository; //user Repo
+    private final RefreshTokenRepository refreshTokenRepository;
     private final BCryptPasswordEncoder passwordEncoder; // password 암호화
     private final AuthenticationManager authenticationManager; // 인증 매니저
     private final CustomUserDetailService customUserDetailService; // loadUserByUsername
     private final JwtUtil jwtUtil; //토큰
 
 
-    // 입려고딘 비밀번호와 디비 암호화된비밀번호 확인
+    // 입력된 비밀번호와 디비 암호화된비밀번호 확인
     public void checkEncodePassword(String rawPassword, String encodedPassword){
         if(!passwordEncoder.matches(rawPassword,encodedPassword)){
             throw new UserException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
@@ -92,15 +95,25 @@ public class UserService {
             // 비밀번호 확인
             checkEncodePassword(loginDto.getPassword(),userDetails.getPassword());
 
+            // User 엔티티 조회
+            User user = userRepository.findByEmail(loginDto.getEmail())
+                    .orElseThrow(() -> new UserException(HttpStatus.BAD_REQUEST, "사용자를 찾을 수 없습니다."));
             // 토큰 생성
             String accessToken=jwtUtil.generationAccessToken(userDetails);
-            String refreshToken = jwtUtil.generateRefreshToken(userDetails);
+            String userRefreshToken = jwtUtil.generateRefreshToken(userDetails);
+
+            // 리프레시 토큰 디비에 저장
+            RefreshToken dbRefreshToken = RefreshToken.builder()
+                    .email(loginDto.getEmail())
+                    .token(userRefreshToken)
+                    .build();
+            refreshTokenRepository.save(dbRefreshToken);
 
             response.setHeader("Authorization", "Bearer " + accessToken);
-            response.setHeader("Authorization-refresh", "Bearer " + refreshToken);
+            response.setHeader("Authorization-refresh", "Bearer " + userRefreshToken);
 
             //로그인 유저용 Token 포함 Dto 반환
-            return UserTokenDto.fromEntity(userDetails,accessToken,refreshToken);
+            return UserTokenDto.fromEntity(userDetails,accessToken,userRefreshToken);
         }catch (Exception e){
             log.info("로그인 처리중 오류 발생", e);
             throw e;
