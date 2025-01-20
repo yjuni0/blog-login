@@ -26,23 +26,26 @@ public class JwtUtil implements Serializable {
     @Value("${jwt.tokenExpirationTime}")
     private Integer tokenExpirationTime;
 
+    @Value("${jwt.refreshTokenExpirationTime}")
+    private Integer refreshTokenExpirationTime;
+
     @Value("${jwt.secret}")
     private String secret;
 
     //토큰으로 username 확인
-    public String getUsernameFromToken(String token){
+    public String getUsernameFromToken(String token) {
         log.info("토큰에 포함된 username 확인 ");
         return getClaimFromToken(token, Claims::getSubject);
     }
 
     // 토큰 인증 만료 날짜
-    public Date getExpirationDateFromToken(String token){
+    public Date getExpirationDateFromToken(String token) {
         log.info("토큰 만료 날짜 확인");
         return getClaimFromToken(token, Claims::getExpiration);
     }
 
     //claimsResolver
-    public <T>T getClaimFromToken(String token, Function<Claims, T> claimsResolver){
+    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
     }
@@ -58,29 +61,29 @@ public class JwtUtil implements Serializable {
     }
 
     //토큰 만료 여부
-    private Boolean isTokenExpired(String token){
+    private Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }
 
-    //JWT 사용자response용 토큰생성
-    public String generationToken(UserDetails userDetails){
+    //JWT 사용자 response 용 토큰 생성
+    public String generationAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userDetails.getUsername());
         claims.put("role", userDetails.getAuthorities());
         log.info("사용자용 토큰 생성 완료");
-        return doGenerateToken(claims, userDetails.getUsername());
+        return doGenerateAccessToken(claims, userDetails.getUsername());
     }
 
     // 토큰 생성
-    private String doGenerateToken(Map<String,Object> claims, String subject){
+    private String doGenerateAccessToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuer("my-blog")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+tokenExpirationTime*1000))
-                .signWith(SignatureAlgorithm.HS512,secret)
+                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime * 3L))
+                .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
     }
 
@@ -90,7 +93,27 @@ public class JwtUtil implements Serializable {
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
+    // 리프레시 토큰 생성
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", userDetails.getUsername());
+        log.info("리프레시 토큰 생성 완료");
+        return doGenerateRefreshToken(claims, userDetails.getUsername());
+    }
 
+    private String doGenerateRefreshToken(Map<String, Object> claims, String subject) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuer("my-blog")
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime * 3L))
+                .signWith(SignatureAlgorithm.HS512, secret)
+                .compact();
+    }
 
-
+    // 리프레시 토큰 검증
+    public Boolean validateRefreshToken(String token) {
+        return !isTokenExpired(token);
+    }
 }
