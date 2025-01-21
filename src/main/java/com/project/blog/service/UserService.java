@@ -4,6 +4,7 @@ package com.project.blog.service;
 import com.project.blog.common.PwdEncoderConfig;
 import com.project.blog.common.exception.UserException;
 import com.project.blog.common.jwt.CustomUserDetailService;
+import com.project.blog.common.jwt.JwtAuthenticationFilter;
 import com.project.blog.common.jwt.JwtUtil;
 import com.project.blog.dto.request.LoginDto;
 import com.project.blog.dto.request.RegisterDto;
@@ -29,6 +30,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -89,43 +91,33 @@ public class UserService {
             if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
                 throw new UserException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
             }
+            // 토큰 생성
+            String accessToken = jwtUtil.generationAccessToken(user);
+            String refreshToken = jwtUtil.generateRefreshToken(user);
 
-            // 기존 리프레시 토큰 조회
-            Optional<RefreshToken> existingRefreshToken =
-                    refreshTokenRepository.findByEmail(loginDto.getEmail());
+            // 리프레시 토큰 저장 (엔티티 생성 시 만료 시간 자동 설정)
+            RefreshToken refreshTokenEntity = RefreshToken.builder()
+                    .email(user.getEmail())
+                    .token(refreshToken)
+                    .createdDate(LocalDateTime.now())
+                    .expiresDate(LocalDateTime.now().plusDays(7))
+                    .build();
+            refreshTokenRepository.save(refreshTokenEntity);
 
-            String userRefreshToken;
-            if (existingRefreshToken.isPresent()) {
-                // 기존 토큰 재사용
-                userRefreshToken = existingRefreshToken.get().getToken();
-            } else {
-                // 새 토큰 생성
-                UserDetails userDetails = customUserDetailService.loadUserByUsername(loginDto.getEmail());
-                userRefreshToken = jwtUtil.generateRefreshToken(userDetails);
-
-                RefreshToken newRefreshToken = RefreshToken.builder()
-                        .email(loginDto.getEmail())
-                        .token(userRefreshToken)
-                        .build();
-                refreshTokenRepository.save(newRefreshToken);
-            }
-
-            // 나머지 로직은 동일
-            UserDetails userDetails = customUserDetailService.loadUserByUsername(loginDto.getEmail());
-            String accessToken = jwtUtil.generationAccessToken(userDetails);
-
-            Cookie refreshTokenCookie = new Cookie("refreshToken", userRefreshToken);
+            // 쿠키 및 헤더 설정
+            Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(true);
             refreshTokenCookie.setPath("/");
+            refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
             response.addCookie(refreshTokenCookie);
 
             response.setHeader("Authorization", "Bearer " + accessToken);
-            response.setHeader("Authorization-refresh", "Bearer " + userRefreshToken);
+            response.setHeader("Authorization-refresh", "Bearer " + refreshToken);
 
-            return UserTokenDto.fromEntity(userDetails, accessToken);
+            return UserTokenDto.fromEntity(user, accessToken);
         } catch (Exception e) {
-            log.error("로그인 처리 중 오류 발생", e);
+            log.error(e.getMessage());
             throw e;
         }
     }

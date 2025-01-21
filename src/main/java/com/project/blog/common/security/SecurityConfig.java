@@ -38,9 +38,9 @@ public class SecurityConfig {
                 .cors(cors->cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(authorize->authorize
                         .requestMatchers("/user/main", "/user/login", "/user/register", "/user/checkId").permitAll()
-                        .requestMatchers("/user/**").hasRole("USER")
-                        .requestMatchers("/board/**").hasRole("USER"))
-//                        .requestMatchers("").authenticated()
+                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/board/**").hasAnyRole("USER", "ADMIN")
+                        .anyRequest().hasRole("ADMIN"))
 //                        .requestMatchers("").authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(excp->excp.authenticationEntryPoint(jwtAuthenticationEntryPoint))
