@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j // 로깅
@@ -70,7 +72,7 @@ public class JwtUtil implements Serializable {
     public String generationAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userDetails.getUsername());
-        claims.put("role", userDetails.getAuthorities());
+        claims.put("roles", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")));
         log.info("사용자용 토큰 생성 완료");
         return doGenerateAccessToken(claims, userDetails.getUsername());
     }
@@ -82,7 +84,7 @@ public class JwtUtil implements Serializable {
                 .setSubject(subject)
                 .setIssuer("my-blog")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime * 3L))
+                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime * 30))
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
     }
@@ -97,6 +99,7 @@ public class JwtUtil implements Serializable {
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", userDetails.getUsername());
+        claims.put("roles", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")));
         log.info("리프레시 토큰 생성 완료");
         return doGenerateRefreshToken(claims, userDetails.getUsername());
     }
@@ -107,7 +110,7 @@ public class JwtUtil implements Serializable {
                 .setSubject(subject)
                 .setIssuer("my-blog")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime * 3L))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime * 60 * 24 * 14))
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
     }

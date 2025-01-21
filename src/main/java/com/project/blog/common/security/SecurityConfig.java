@@ -38,8 +38,8 @@ public class SecurityConfig {
                 .cors(cors->cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(authorize->authorize
                         .requestMatchers("/user/main", "/user/login", "/user/register", "/user/checkId").permitAll()
-                        .requestMatchers("/user/**").authenticated())
-//                        .requestMatchers("").authenticated()
+                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/board/**").hasRole("USER"))
 //                        .requestMatchers("").authenticated()
 //                        .requestMatchers("").authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

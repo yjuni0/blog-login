@@ -42,7 +42,7 @@ public class UserController {
         log.info("로그인 요청");
         try {
             UserTokenDto loginUser = userService.login(loginDto, response);
-            return ResponseEntity.ok(loginUser);
+            return ResponseEntity.status(HttpStatus.OK).header("Authorization","Bearer "+loginUser.getAccessToken()).body(loginUser);
         } catch (UserException e) {
             return ResponseEntity
                     .status(e.getStatusCode())

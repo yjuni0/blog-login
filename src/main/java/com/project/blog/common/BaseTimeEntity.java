@@ -2,6 +2,7 @@ package com.project.blog.common;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -16,19 +17,19 @@ public class BaseTimeEntity {
 
     @CreatedDate
     @Column(name = "created_date", updatable = false)
-    private String createdDate;
+    private LocalDateTime createdDate;
 
     @LastModifiedDate
     @Column(name="modified_date")
-    private String modifiedDate;
+    private LocalDateTime modifiedDate;
 
     @PrePersist //엔티티가 영속화 되기 전에 실행
     public void onPrePersist(){
-        this.createdDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
+        this.createdDate = LocalDateTime.now();
         this.modifiedDate=this.createdDate;
     }
     @PreUpdate //엔티티가 업데이트 되기 직전에 실행
     public void onPreUpdate(){
-        this.modifiedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
+        this.modifiedDate = LocalDateTime.now();
     }
 }

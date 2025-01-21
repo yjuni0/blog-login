@@ -33,37 +33,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Value("${jwt.prefix}")
     private String TOKEN_PREFIX;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader(HEADER_STRING);
         String refreshHeader = request.getHeader(REFRESH_HEADER_STRING);
-        String username = null;
+        String userEmail = null;
         String accessToken = null;
         String refreshToken = null;
-
+        log.info(header);
+        log.info(refreshHeader);
         // 엑세스 토큰 헤더 확인
-        if(header != null && header.startsWith(TOKEN_PREFIX)){
-            // 토큰 헤더 제거 ( 토큰만 추출)
+        if (header != null && header.startsWith(TOKEN_PREFIX)) {
+            // 토큰 헤더에서 "Bearer " 접두어 제거
             accessToken = header.substring(TOKEN_PREFIX.length());
             try {
                 // 토큰으로 사용자 추출
-                username = this.jwtUtil.getUsernameFromToken(accessToken);
+                userEmail = this.jwtUtil.getUsernameFromToken(accessToken);
                 log.info("JWT 토큰에서 사용자명 추출 완료");
             } catch (ExpiredJwtException eje) {
                 log.info("액세스 토큰 만료, 리프레시 토큰 확인");
+
                 // 리프레시 헤더 확인
                 if (refreshHeader != null && refreshHeader.startsWith(TOKEN_PREFIX)) {
-                    // 토큰 헤더 제거 ( 토큰만 추출)
+                    // 리프레시 토큰 추출
                     refreshToken = refreshHeader.substring(TOKEN_PREFIX.length());
                     try {
                         // 토큰으로 사용자 추출
-                        username = this.jwtUtil.getUsernameFromToken(refreshToken);
-                        // 토큰 검증
+                        userEmail = this.jwtUtil.getUsernameFromToken(refreshToken);
+
+                        // 리프레시 토큰 검증
                         if (this.jwtUtil.validateRefreshToken(refreshToken)) {
-                            String newAccessToken = this.jwtUtil.generationAccessToken(this.userDetailService.loadUserByUsername(username));
+                            String newAccessToken = this.jwtUtil.generationAccessToken(this.userDetailService.loadUserByUsername(userEmail));
                             response.setHeader(HEADER_STRING, TOKEN_PREFIX + newAccessToken);
-                            accessToken = newAccessToken;
+                            accessToken = newAccessToken; // 새로운 액세스 토큰을 사용할 것
                             log.info("새로운 액세스 토큰 발급 완료");
                         } else {
                             log.error("리프레시 토큰 만료");
@@ -92,13 +94,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } else {
             log.warn("토큰이 헤더에 포함 되어 있지 않거나 잘못된 형식");
         }
-        // 사용자 이름이 존재 하고, 현재 인증 정보가 없을 때
-        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+
+        // 사용자 이름이 존재하고, 현재 인증 정보가 없을 때
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             // 사용자 정보 로드
-            UserDetails userDetails = this.userDetailService.loadUserByUsername(username);
+            UserDetails userDetails = this.userDetailService.loadUserByUsername(userEmail);
 
             // 토큰 유효성 검사
-            if (this.jwtUtil.validateToken(accessToken, userDetails)){
+            if (this.jwtUtil.validateToken(accessToken, userDetails)) {
                 // 새로운 인증 토큰 생성
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -106,14 +109,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 인증 세부 정보 설정
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // SecurityContext 에 인증 정보 저장
+                // SecurityContext에 인증 정보 저장
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             } else {
-                // 토큰 유효 하지 않을 경우 처리
+                // 토큰 유효하지 않을 경우 처리
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("유효 하지 않은 토큰");
+                response.getWriter().write("유효하지 않은 토큰");
             }
         }
+
+        // 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
 }
