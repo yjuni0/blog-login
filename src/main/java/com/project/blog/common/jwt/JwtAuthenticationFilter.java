@@ -35,9 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${jwt.header}")
     private String HEADER_STRING;
 
-    @Value("${jwt.refresh.header}")
-    private String REFRESH_HEADER_STRING;
-
     @Value("${jwt.prefix}")
     private String TOKEN_PREFIX;
     @Override
@@ -45,69 +42,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader(HEADER_STRING);
         String userEmail = null;
         String accessToken = null;
-        // 쿠키에 담겨 있는 리프레시 토큰 확인
-        Cookie[] cookies = request.getCookies();
-        String refreshToken = "";
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if("refreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
-        log.info(header);
-        log.info(refreshToken);
-        // 엑세스 토큰 헤더 확인
+
         if (header != null && header.startsWith(TOKEN_PREFIX)) {
-            // 토큰 헤더에서 "Bearer " 접두어 제거
             accessToken = header.substring(TOKEN_PREFIX.length());
             try {
-                // 토큰으로 사용자 추출
                 userEmail = this.jwtUtil.getUsernameFromToken(accessToken);
-                log.info("JWT 토큰에서 사용자명 추출 완료");
-            } catch (ExpiredJwtException eje) {
+                log.info("JWT 토큰에서 사용자명 추출 완료: {}", userEmail);
+            } catch (ExpiredJwtException e) {
                 log.info("액세스 토큰 만료, 리프레시 토큰 확인");
-                
-                // 리프레시 토큰이 존재하면 검증
-                if (refreshToken != null) {
-                    try {
-                        userEmail = this.jwtUtil.getUsernameFromToken(refreshToken);
-
-                        if (this.jwtUtil.validateRefreshToken(refreshToken)) {
-                            // 데이터베이스에 저장된 리프레시 토큰과 일치하는지 확인
-                            Optional<RefreshToken> storedRefreshToken =
-                                    refreshTokenRepository.findByEmailAndToken(userEmail, refreshToken);
-
-                            if (storedRefreshToken.isPresent()) {
-                                String newAccessToken = this.jwtUtil.generationAccessToken(
-                                        this.userDetailService.loadUserByUsername(userEmail)
-                                );
-                                response.setHeader(HEADER_STRING, TOKEN_PREFIX + newAccessToken);
-                                accessToken = newAccessToken;
-                                log.info("새로운 액세스 토큰 발급 완료");
-                            } else {
-                                log.error("데이터베이스의 리프레시 토큰과 불일치");
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                response.getWriter().write("유효하지 않은 리프레시 토큰입니다.");
-                                return;
-                            }
-                        } else {
-                            log.error("리프레시 토큰 만료");
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("리프레시 토큰이 만료되었습니다. 다시 로그인해주세요.");
-                            return;
-                        }
-                    } catch (Exception e) {
-                        log.error("리프레시 토큰 검증 중 오류 발생", e);
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        response.getWriter().write("리프레시 토큰 검증 오류");
-                        return;
-                    }
+                userEmail = e.getClaims().getSubject();
+                log.info("만료된 토큰에서 추출한 이메일: {}", userEmail);
+                Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByEmail(userEmail);
+                log.info(refreshTokenOpt.toString());
+                if (refreshTokenOpt.isPresent() && this.jwtUtil.validateRefreshToken(refreshTokenOpt.get().getToken())) {
+                    UserDetails userDetails = this.userDetailService.loadUserByUsername(userEmail);
+                    String newAccessToken = this.jwtUtil.generationAccessToken(userDetails);
+                    response.setHeader(HEADER_STRING, TOKEN_PREFIX + newAccessToken);
+                    accessToken = newAccessToken;
+                    log.info("새로운 액세스 토큰 발급 완료");
                 } else {
-                    log.error("리프레시 토큰이 쿠키에 없음");
+                    log.error("유효한 리프레시 토큰이 없음");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("리프레시 토큰이 없습니다. 다시 로그인해 주세요.");
+                    response.getWriter().write("토큰이 만료되었습니다. 다시 로그인해주세요.");
                     return;
                 }
             } catch (Exception e) {
@@ -117,8 +73,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
         } else {
-            log.warn("토큰이 헤더에 포함 되어 있지 않거나 잘못된 형식");
+            log.warn("토큰이 헤더에 포함되어 있지 않거나 잘못된 형식");
         }
+
 
         // 사용자 이름이 존재하고, 현재 인증 정보가 없을 때
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -142,7 +99,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.getWriter().write("유효하지 않은 토큰");
             }
         }
-
         // 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }

@@ -1,6 +1,7 @@
 package com.project.blog.common.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
@@ -53,12 +54,15 @@ public class JwtUtil implements Serializable {
     }
 
     // 토큰 비밀키 사용해서 토큰 정보 추출
-    private Claims getAllClaimsFromToken(String token) {
+    private Claims getAllClaimsFromToken(String token) throws ExpiredJwtException {
         try {
             return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        }catch (ExpiredJwtException e){
+            log.error("만료된 토큰",e.getMessage());
+            throw e;
         } catch (Exception e) {
-            log.error("잘못된 토큰 서명 또는 만료된 토큰", e);
-            throw new RuntimeException("잘못된 토큰 서명 또는 만료된 토큰");
+            log.error("잘못된 토큰 서명", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -84,7 +88,7 @@ public class JwtUtil implements Serializable {
                 .setSubject(subject)
                 .setIssuer("my-blog")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime * 30))
+                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime*30))
                 .signWith(SignatureAlgorithm.HS512, secret)
                 .compact();
     }
