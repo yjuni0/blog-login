@@ -3,7 +3,9 @@ package com.project.blog.entity;
 import com.project.blog.common.BaseTimeEntity;
 import com.project.blog.common.Role;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +29,7 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Getter
     @Column(nullable = false)
     private String userName;
 
@@ -75,5 +78,9 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
+    }
+
+    public String getUserNicName() {
+        return userName;
     }
 }
