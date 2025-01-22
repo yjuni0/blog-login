@@ -9,6 +9,7 @@ import com.project.blog.common.jwt.JwtUtil;
 import com.project.blog.dto.request.LoginDto;
 import com.project.blog.dto.request.RegisterDto;
 import com.project.blog.dto.request.UserUpdateDto;
+import com.project.blog.dto.response.UserDto;
 import com.project.blog.dto.response.UserResponseDto;
 import com.project.blog.dto.response.UserTokenDto;
 import com.project.blog.entity.RefreshToken;
@@ -119,4 +120,8 @@ public class UserService {
         return UserResponseDto.fromEntity(updateUser);
     }
 
+    public UserDto getDetail(Long userId) {
+        User getUserDetail = userRepository.findById(userId).orElseThrow(()->new UserException(HttpStatus.BAD_REQUEST,"해당 유저를 찾지 못함"));
+        return UserDto.fromEntity(getUserDetail);
+    }
 }

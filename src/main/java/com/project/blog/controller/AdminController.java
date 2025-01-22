@@ -86,9 +86,9 @@ public class AdminController {
     }
     // 유저 상세조회
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserDto> userDetail(@PathVariable("userId") Long userId){
-        UserDto user = UserDto.fromEntity(userRepository.findById(userId).orElseThrow(()->new UserException("user not found:"+userId)));
-        return ResponseEntity.status(HttpStatus.OK).body(user);
+    public ResponseEntity<UserDto> getUserDetail(@PathVariable("userId") Long userId){
+        UserDto userDetail = userService.getDetail(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(userDetail);
     }
 
     // 유저 삭제
