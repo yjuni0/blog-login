@@ -91,7 +91,9 @@ public class UserService {
             if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
                 throw new UserException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
             }
-            // 토큰 생성
+            // 토큰 생성 이전 리프레시 토큰이 디비에 있으면 삭제 후 진행
+            refreshTokenRepository.findByEmail(user.getEmail()).ifPresent(refreshTokenRepository::delete);
+
             String accessToken = jwtUtil.generationAccessToken(user);
             String refreshToken = jwtUtil.generateRefreshToken(user);
 
@@ -104,17 +106,7 @@ public class UserService {
                     .build();
             refreshTokenRepository.save(refreshTokenEntity);
 
-            // 쿠키 및 헤더 설정
-            Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
-            refreshTokenCookie.setHttpOnly(true);
-            refreshTokenCookie.setSecure(true);
-            refreshTokenCookie.setPath("/");
-            refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
-            response.addCookie(refreshTokenCookie);
-
             response.setHeader("Authorization", "Bearer " + accessToken);
-            response.setHeader("Authorization-refresh", "Bearer " + refreshToken);
-
             return UserTokenDto.fromEntity(user, accessToken);
         } catch (Exception e) {
             log.error(e.getMessage());
