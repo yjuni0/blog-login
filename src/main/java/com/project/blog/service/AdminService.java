@@ -1,7 +1,6 @@
 package com.project.blog.service;
 
-import com.project.blog.dto.response.UserDto;
-import com.project.blog.entity.User;
+import com.project.blog.dto.response.user.UserDto;
 import com.project.blog.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,7 @@ public class AdminService {
                     UserDto dto = new UserDto();
                     dto.setId(user.getId());
                     dto.setUserEmail(user.getEmail());
-                    dto.setUserName(user.getUserNicName());
+                    dto.setUserName(user.getUserNickName());
                     return dto;
                 });
     }
