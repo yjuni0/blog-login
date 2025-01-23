@@ -1,12 +1,14 @@
 package com.project.blog.controller;
 
-import com.project.blog.dto.request.BoardUpdateDto;
-import com.project.blog.dto.request.BoardWriteDto;
+import com.project.blog.dto.request.board.BoardUpdateDto;
+import com.project.blog.dto.request.board.BoardWriteDto;
 import com.project.blog.dto.request.SearchDto;
-import com.project.blog.dto.response.BoardDetailDto;
-import com.project.blog.dto.response.BoardDtoRes;
+import com.project.blog.dto.response.board.BoardDetailDto;
+import com.project.blog.dto.response.board.BoardListDtoRes;
 import com.project.blog.entity.User;
 import com.project.blog.service.BoardService;
+import com.project.blog.service.CommentService;
+import com.project.blog.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,27 +28,29 @@ import org.springframework.web.bind.annotation.*;
 public class BoardController {
 
     private final BoardService boardService;
+    private final CommentService commentService;
+    private final FileService fileService;
 
     // 메인 페이지 게시글 전체 조회
     @GetMapping("/list")
-    public ResponseEntity<Page<BoardDtoRes>> boardList(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<BoardDtoRes> listDto = boardService.getAllBoards(pageable);
+    public ResponseEntity<Page<BoardListDtoRes>> boardList(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<BoardListDtoRes> listDto = boardService.getAllBoards(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(listDto);
     }
     //검색 조회
     @GetMapping("/search")
-    public ResponseEntity<Page<BoardDtoRes>> search(@PageableDefault(size = 5,sort = "id",direction = Sort.Direction.DESC) Pageable pageable,
-                                                    @RequestParam String title,
-                                                    @RequestParam String content,
-                                                    @RequestParam String writer){
+    public ResponseEntity<Page<BoardListDtoRes>> search(@PageableDefault(size = 5,sort = "id",direction = Sort.Direction.DESC) Pageable pageable,
+                                                        @RequestParam String title,
+                                                        @RequestParam String content,
+                                                        @RequestParam String writer){
         SearchDto searchDto = SearchDto.createSearchData(title,content,writer);
-        Page<BoardDtoRes> listDto = boardService.search(searchDto, pageable);
+        Page<BoardListDtoRes> listDto = boardService.search(searchDto, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(listDto);
     }
 
     @PostMapping("/write")
-    public ResponseEntity<BoardDtoRes> write(@RequestBody BoardWriteDto writeDto, @AuthenticationPrincipal User user){
-        BoardDtoRes saveBoardDto = boardService.write(writeDto, user);
+    public ResponseEntity<BoardListDtoRes> write(@RequestBody BoardWriteDto writeDto, @AuthenticationPrincipal User user){
+        BoardListDtoRes saveBoardDto = boardService.write(writeDto, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(saveBoardDto);
     }
 

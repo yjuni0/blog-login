@@ -1,11 +1,11 @@
 package com.project.blog.service;
 
 import com.project.blog.common.exception.ResourceNotFoundException;
-import com.project.blog.dto.request.BoardUpdateDto;
-import com.project.blog.dto.request.BoardWriteDto;
+import com.project.blog.dto.request.board.BoardUpdateDto;
+import com.project.blog.dto.request.board.BoardWriteDto;
 import com.project.blog.dto.request.SearchDto;
-import com.project.blog.dto.response.BoardDetailDto;
-import com.project.blog.dto.response.BoardDtoRes;
+import com.project.blog.dto.response.board.BoardDetailDto;
+import com.project.blog.dto.response.board.BoardListDtoRes;
 import com.project.blog.entity.Board;
 import com.project.blog.entity.User;
 import com.project.blog.repository.BoardRepository;
@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.util.List;
 
 @Service
@@ -30,15 +31,15 @@ public class BoardService {
     private final UserRepository userRepository;
 
     // 첫 페이징 화면 전체 게시글 로드 페이징 처리
-    public Page<BoardDtoRes> getAllBoards(Pageable pageable) {
+    public Page<BoardListDtoRes> getAllBoards(Pageable pageable) {
         Page<Board> boards = boardRepository.findAll(pageable);
-        List<BoardDtoRes> result = boards.getContent().stream()
-                .map(BoardDtoRes::fromEntity)
+        List<BoardListDtoRes> result = boards.getContent().stream()
+                .map(BoardListDtoRes::fromEntity)
                 .toList();
         return new PageImpl<>(result, pageable, boards.getTotalElements());
     }
     // 게시글 검색 기능
-    public Page<BoardDtoRes> search(SearchDto searchDto, Pageable pageable) {
+    public Page<BoardListDtoRes> search(SearchDto searchDto, Pageable pageable) {
         Page<Board> result = null;
         if (!searchDto.getTitle().isEmpty()){
             result = boardRepository.findByTitleContaining(searchDto.getTitle(), pageable);
@@ -50,8 +51,8 @@ public class BoardService {
             // 조건이 없을 경우 빈 페이지 반환
             return Page.empty(pageable);
         }
-        List<BoardDtoRes> list = result.getContent().stream()
-                .map(BoardDtoRes::fromEntity)
+        List<BoardListDtoRes> list = result.getContent().stream()
+                .map(BoardListDtoRes::fromEntity)
                 .toList();
         return new PageImpl<>(list, pageable, result.getTotalElements());
     }
@@ -63,12 +64,12 @@ public class BoardService {
         return BoardDetailDto.fromEntity(findBoard);
     }
     // 게시글 등록
-    public BoardDtoRes write(BoardWriteDto writeDto, User user){
+    public BoardListDtoRes write(BoardWriteDto writeDto, User user){
         Board board = BoardWriteDto.ofEntity(writeDto);
         User writer =  userRepository.findByEmail(user.getUsername()).orElseThrow(()->new ResourceNotFoundException("User","UserName", user.getUsername()));
         board.setMappingMember(writer);
         Board savedBoard = boardRepository.save(board);
-        return BoardDtoRes.fromEntity(savedBoard);
+        return BoardListDtoRes.fromEntity(savedBoard);
     }
 
     // 게시글 수정
@@ -76,6 +77,7 @@ public class BoardService {
         Board updateBoard = boardRepository.findById(boardId).orElseThrow(
                 ()->new ResourceNotFoundException("board","board Id",String.valueOf(boardId))
         );
+
         updateBoard.update(updateDto.getTitle(), updateDto.getContent());
         return BoardDetailDto.fromEntity(updateBoard);
     }

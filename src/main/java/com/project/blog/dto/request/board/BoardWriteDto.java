@@ -1,10 +1,14 @@
-package com.project.blog.dto.request;
+package com.project.blog.dto.request.board;
 
 import com.project.blog.entity.Board;
+import com.project.blog.entity.FileEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
 
 @Getter
 @Setter
