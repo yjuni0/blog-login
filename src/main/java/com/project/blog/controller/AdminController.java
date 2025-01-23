@@ -55,7 +55,7 @@ public class AdminController {
         Page<BoardListDtoRes> listDto = boardService.search(searchDto, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(listDto);
     }
-
+    // 게시글 작성
     @PostMapping("/board/write")
     public ResponseEntity<BoardListDtoRes> write(@RequestBody BoardWriteDto writeDto, @AuthenticationPrincipal User user){
         BoardListDtoRes saveBoardDto = boardService.write(writeDto, user);
@@ -68,7 +68,7 @@ public class AdminController {
         BoardDetailDto detailDto = boardService.detail(boardId);
         return ResponseEntity.status(HttpStatus.OK).body(detailDto);
     }
-
+    // 게시글 삭제
     @DeleteMapping("/board/{boardId}")
     public ResponseEntity<BoardDetailDto> deleteBoard(@PathVariable("boardId") Long boardId){
         boardService.delete(boardId);
