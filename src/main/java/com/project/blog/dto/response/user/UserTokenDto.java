@@ -1,10 +1,4 @@
-package com.project.blog.dto.response;
-
-
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
+package com.project.blog.dto.response.user;
 
 
 import lombok.Builder;

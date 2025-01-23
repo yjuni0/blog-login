@@ -1,4 +1,4 @@
-package com.project.blog.dto.response;
+package com.project.blog.dto.response.user;
 
 import com.project.blog.entity.User;
 import lombok.Builder;
@@ -21,7 +21,7 @@ public class UserResponseDto {
     public static UserResponseDto fromEntity(User user){
         return UserResponseDto.builder()
                 .email(user.getEmail())
-                .userName(user.getUsername())
+                .userName(user.getUserNickName())
                 .build();
     }
 

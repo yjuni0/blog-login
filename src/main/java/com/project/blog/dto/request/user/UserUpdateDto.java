@@ -1,9 +1,8 @@
-package com.project.blog.dto.request;
+package com.project.blog.dto.request.user;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @NoArgsConstructor

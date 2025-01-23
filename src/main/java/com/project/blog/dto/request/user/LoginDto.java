@@ -1,4 +1,4 @@
-package com.project.blog.dto.request;
+package com.project.blog.dto.request.user;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.project.blog.dto.request;
+package com.project.blog.dto.request.user;
 
 
 import com.project.blog.common.Role;

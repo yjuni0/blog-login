@@ -39,6 +39,9 @@ public class User extends BaseTimeEntity implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     public List<Board> boards = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public List<Comment> comments = new ArrayList<>();
+
     @Builder
     public User(Long id, String email, String password, String userName, Role role) {
         this.id = id;
@@ -80,7 +83,7 @@ public class User extends BaseTimeEntity implements UserDetails {
         return UserDetails.super.isEnabled();
     }
 
-    public String getUserNicName() {
+    public String getUserNickName() {
         return userName;
     }
 }

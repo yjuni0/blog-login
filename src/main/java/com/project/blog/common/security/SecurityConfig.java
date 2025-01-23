@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers("/user/main", "/user/login", "/user/register", "/user/checkId","/api/validate-token").permitAll()
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/board/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/comment/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/file/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().hasRole("ADMIN"))
 //                        .requestMatchers("").authenticated())
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
