@@ -7,7 +7,7 @@
 |-----------|------------|
 | ![유저토큰](https://github.com/user-attachments/assets/dd8fb4b9-ca3a-47d2-939c-3d2c8d3f8a62) | ![어드민토큰](https://github.com/user-attachments/assets/4cb476ec-72c7-4e4f-853e-37d82855348b) |
 
-| 유저접근 | 어드민접근 |
+| 유저접근제한 | 어드민접근 |
 |---------|------------|
 | ![유저리스트](https://github.com/user-attachments/assets/b0edf983-bffa-40a0-933b-890473c1cd2a) | ![어드민리스트](https://github.com/user-attachments/assets/d2824b2f-509a-44e6-93e5-14c05d51c87c) |
 
