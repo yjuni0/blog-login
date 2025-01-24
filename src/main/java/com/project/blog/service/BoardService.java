@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,8 +61,19 @@ public class BoardService {
 
     // 게시글 상세 보기
     public BoardDetailDto detail(Long boardId) {
+        // Board 엔티티 조회
         Board findBoard = boardRepository.findById(boardId).orElseThrow(
-                ()-> new ResourceNotFoundException("board","board Id",String.valueOf(boardId)));
+                () -> new ResourceNotFoundException("board", "board Id", String.valueOf(boardId))
+        );
+
+        // 현재 로그인한 사용자 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUser = authentication.getName();
+
+        // 조회수 증가
+        findBoard.upViewCount(currentUser);
+
+        // BoardDetailDto로 변환하여 반환
         return BoardDetailDto.fromEntity(findBoard);
     }
     // 게시글 등록

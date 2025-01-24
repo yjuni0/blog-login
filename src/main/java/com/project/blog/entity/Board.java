@@ -16,23 +16,20 @@ import java.util.Objects;
 public class Board extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "board_id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1024)
     private String content;
 
     private int viewCount;
 
     @OneToOne(fetch = FetchType.LAZY, optional = true, cascade = CascadeType.ALL)
-    @JoinColumn(name = "file_id")
     private FileEntity backgroundImage;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
     public User user;
 
     @OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -54,8 +51,11 @@ public class Board extends BaseTimeEntity {
         this.content = content;
     }
     //조회수 증가
-    public void setViewCount(){
-        this.viewCount++;
+    public void upViewCount(String currentUser) {
+        // 게시글 작성자와 현재 사용자가 다를 경우에만 조회수 증가
+        if (!Objects.equals(this.user.getUsername(), currentUser)) {
+            this.viewCount++;
+        }
     }
 
     // 회원 ( 회원과의 관계 )

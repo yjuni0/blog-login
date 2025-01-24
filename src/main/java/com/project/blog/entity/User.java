@@ -20,17 +20,15 @@ import java.util.List;
 public class User extends BaseTimeEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "user_id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @Getter
-    @Column(nullable = false)
+    @Column(nullable = false, length = 5)
     private String userName;
 
     @Enumerated(EnumType.STRING)
