@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class FileEntity extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "file_id")
     private Long id;
 
     private String fileName;
