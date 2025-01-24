@@ -2,6 +2,7 @@ package com.project.blog.common.jwt;
 
 
 import com.project.blog.entity.RefreshToken;
+import com.project.blog.entity.User;
 import com.project.blog.repository.RefreshTokenRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -56,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.info(refreshTokenOpt.toString());
                 if (refreshTokenOpt.isPresent() && this.jwtUtil.validateRefreshToken(refreshTokenOpt.get().getToken())) {
                     UserDetails userDetails = this.userDetailService.loadUserByUsername(userEmail);
-                    String newAccessToken = this.jwtUtil.generationAccessToken(userDetails);
+                    String newAccessToken = this.jwtUtil.generationAccessToken((User) userDetails);
                     response.setHeader(HEADER_STRING, TOKEN_PREFIX + newAccessToken);
                     accessToken = newAccessToken;
                     log.info("새로운 액세스 토큰 발급 완료");

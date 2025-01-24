@@ -1,5 +1,6 @@
 package com.project.blog.common.jwt;
 
+import com.project.blog.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -73,12 +74,12 @@ public class JwtUtil implements Serializable {
     }
 
     //JWT 사용자 response 용 토큰 생성
-    public String generationAccessToken(UserDetails userDetails) {
+    public String generationAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("id", userDetails.getUsername());
-        claims.put("roles", userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")));
+        claims.put("id", user.getUserNickName());
+        claims.put("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")));
         log.info("사용자용 토큰 생성 완료");
-        return doGenerateAccessToken(claims, userDetails.getUsername());
+        return doGenerateAccessToken(claims, user.getUsername());
     }
 
     // 토큰 생성
