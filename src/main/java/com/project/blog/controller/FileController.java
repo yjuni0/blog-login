@@ -6,6 +6,7 @@ import com.project.blog.dto.response.file.FileResDto;
 import com.project.blog.entity.Board;
 import com.project.blog.service.FileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +28,9 @@ public class FileController {
 
     // 파일 조회 (단일 파일)
     @GetMapping("/{fileId}")
-    public ResponseEntity<FileResDto> get(@PathVariable Long boardId, @PathVariable Long fileId) {
-        FileResDto getFile = fileService.getFile(fileId);
-        return ResponseEntity.status(HttpStatus.OK).body(getFile);
+    public ResponseEntity<Resource> get(@PathVariable Long boardId, @PathVariable Long fileId) {
+        // 서비스에서 반환한 ResponseEntity 그대로 반환
+        return fileService.getFile(fileId);  // ResponseEntity<Resource>를 그대로 반환
     }
 
     // 파일 삭제

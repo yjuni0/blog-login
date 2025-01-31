@@ -18,7 +18,7 @@ public class FileEntity extends BaseTimeEntity {
     private String filePath;
     private String fileType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Board board;
 
     @Builder
