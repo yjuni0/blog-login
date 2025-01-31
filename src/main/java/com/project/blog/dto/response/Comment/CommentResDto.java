@@ -14,24 +14,27 @@ import java.time.LocalDateTime;
 public class CommentResDto {
     private Long commentId;
     private String content;
+    private Long boardId;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
-    private String commentWriteName;
+    private String commentWriterName;
 
     @Builder
-    public CommentResDto(Long commentId, String content, LocalDateTime createdDate, LocalDateTime modifiedDate, String commentWriteName) {
+    public CommentResDto(Long commentId, String content, Long boardId, LocalDateTime createdDate, LocalDateTime modifiedDate, String commentWriterName) {
         this.commentId = commentId;
         this.content = content;
+        this.boardId = boardId;
         this.createdDate = createdDate;
         this.modifiedDate = modifiedDate;
-        this.commentWriteName = commentWriteName;
+        this.commentWriterName = commentWriterName;
     }
 
     public static CommentResDto fromEntity(Comment comment) {
         return CommentResDto.builder()
                 .commentId(comment.getId())
                 .content(comment.getContent())
-                .commentWriteName(comment.getUser().getUserNickName())
+                .boardId(comment.getBoard().getId())
+                .commentWriterName(comment.getUser().getUserNickName())
                 .createdDate(comment.getCreatedDate())
                 .modifiedDate(comment.getModifiedDate())
                 .build();

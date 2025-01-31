@@ -68,7 +68,7 @@ public class JwtUtil implements Serializable {
     }
 
     //토큰 만료 여부
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }

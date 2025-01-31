@@ -6,13 +6,17 @@ import com.project.blog.dto.request.user.LoginDto;
 import com.project.blog.dto.request.user.RegisterDto;
 import com.project.blog.dto.response.user.UserResponseDto;
 import com.project.blog.dto.response.user.UserTokenDto;
+import com.project.blog.entity.User;
 import com.project.blog.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 
 @RequiredArgsConstructor
@@ -47,5 +51,13 @@ public class UserController {
                     .status(e.getStatusCode())
                     .body(null); // 또는 에러 메시지 포함 DTO
         }
+    }
+
+    @PostMapping("/checkPwd")
+    public ResponseEntity<UserResponseDto> check(@AuthenticationPrincipal User user, @RequestBody Map<String, String> request){
+        log.info("비밀번호 확인 요청");
+        String password = request.get("password");
+        UserResponseDto memberInfo = userService.check(user, password);
+        return ResponseEntity.status(HttpStatus.OK).body(memberInfo);
     }
 }

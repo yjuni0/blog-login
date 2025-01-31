@@ -28,6 +28,7 @@ public class AdminService {
                     return dto;
                 });
     }
+
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
     }

@@ -45,6 +45,21 @@ public class UserService {
             throw new UserException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
         }
     }
+    // 비밀번호 확인 로직
+    public UserResponseDto check(User user, String password){
+        User checkMember =(User) customUserDetailService.loadUserByUsername(user.getEmail());
+        checkEncodePassword(password,checkMember.getPassword());
+
+        return UserResponseDto.fromEntity(checkMember);
+    }
+
+    // 사용자 입력한 비밀번호, DB에 저장된 비밀번호 같은지 체크 :인코딩 확인
+    private void checkEncodePassword(String rawPassword, String encodedPassword) {
+        if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+            throw new UserException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
+        }
+    }
+
 
     public boolean isExistUserEmail(String email) {
         if(userRepository.findByEmail(email).isPresent()){
